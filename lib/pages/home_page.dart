@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyrefresh/material_footer.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import '../service/service_method.dart';
@@ -6,7 +7,6 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
-
 
 class HomePage extends StatefulWidget {
   @override
@@ -17,22 +17,18 @@ class _HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin {
   int page = 1;
   List<Map> hotGoodsList = [];
-
   @override
   bool get wantKeepAlive => true;
   @override
   void initState() {
     _getHotGoods();
-    // TODO: implement initState
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text("百姓生活+"),
-        ),
+        appBar: AppBar(title: Text("百姓生活+")),
         body: FutureBuilder(
           future: request('homePageContext',
               formData: {'lon': '104.10194', 'lat': '30.65984'}),
@@ -66,8 +62,16 @@ class _HomePageState extends State<HomePage>
                   (data['data']['floor2'] as List).cast(); //楼层1商品和图片
               List<Map> floor3 =
                   (data['data']['floor3'] as List).cast(); //楼层1商品和图片
-              return SingleChildScrollView(
-                child: Column(
+              return EasyRefresh(
+                // footer:ClassicalFooter(
+                //   bgColor: Colors.white,
+                //   textColor: Colors.pink[600],
+                //   noMoreText: '',
+                //   loadReadyText: '上拉加载...',
+                // ),
+                footer: MaterialFooter(),
+                firstRefresh: true,
+                child: ListView(
                   children: <Widget>[
                     SwiperDiy(swiperDataList: swiperDataList),
                     NavigatorGrid(gridDataList: gridDataList),
@@ -84,6 +88,10 @@ class _HomePageState extends State<HomePage>
                     _hotGoods(),
                   ],
                 ),
+                onLoad: () async {
+                  print('开始加载更多');
+                  _getHotGoods();
+                },
               );
             } else {
               return Center(
@@ -140,9 +148,10 @@ class _HomePageState extends State<HomePage>
                       fontSize: ScreenUtil().setSp(26)),
                 ),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Container(
-                      alignment: Alignment.centerLeft,
+                      padding: EdgeInsets.only(left: 10.0),
                       child: Text(
                         '￥${item['mallPrice']}',
                         style: TextStyle(
@@ -151,8 +160,7 @@ class _HomePageState extends State<HomePage>
                       ),
                     ),
                     Container(
-                      margin: EdgeInsets.only(left: 5.0),
-                      alignment: Alignment.centerRight,
+                      padding: EdgeInsets.only(right: 10.0),
                       child: Text(
                         '￥${item['price']}',
                         style: TextStyle(
@@ -299,7 +307,7 @@ class Recommend extends StatelessWidget {
         child: Column(
           children: <Widget>[
             _titleWidget(),
-            _recommendList(),
+            _recommendList(context),
           ],
         ),
       ),
@@ -310,7 +318,7 @@ class Recommend extends StatelessWidget {
   Widget _titleWidget() {
     return Container(
       alignment: Alignment.centerLeft,
-      padding: EdgeInsets.fromLTRB(10.0, 5.0, 0, 8.0),
+      padding: EdgeInsets.fromLTRB(10.0, 2.0, 0, 5.0),
       decoration: BoxDecoration(
           color: Colors.white,
           border:
@@ -327,8 +335,8 @@ class Recommend extends StatelessWidget {
     return InkWell(
       onTap: () {},
       child: Container(
-        height: ScreenUtil().setHeight(300.0),
-        width: ScreenUtil().setWidth(250.0),
+        width: ScreenUtil().setWidth(250),
+        padding: EdgeInsets.all(8.0),
         decoration: BoxDecoration(
             color: Colors.white,
             border:
@@ -336,12 +344,15 @@ class Recommend extends StatelessWidget {
         child: Column(
           children: <Widget>[
             Image.network(recommendList[index]['image']),
-            Text('￥${recommendList[index]['mallPrice']}'),
-            Text('￥${recommendList[index]['price']}',
-                style: TextStyle(
-                    decoration: TextDecoration.lineThrough,
-                    color: Colors.grey,
-                    fontSize: 12.0)),
+            Text('￥${recommendList[index]['mallPrice']}',
+                style: TextStyle(fontSize: ScreenUtil().setSp(28))),
+            Text(
+              '￥${recommendList[index]['price']}',
+              style: TextStyle(
+                  fontSize: ScreenUtil().setSp(26),
+                  decoration: TextDecoration.lineThrough,
+                  color: Colors.grey),
+            ),
           ],
         ),
       ),
@@ -349,9 +360,9 @@ class Recommend extends StatelessWidget {
   }
 
   //横向列表组件
-  Widget _recommendList() {
+  Widget _recommendList(BuildContext context) {
     return Container(
-      height: ScreenUtil().setHeight(300.0),
+      height: ScreenUtil().setHeight(360.0),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: recommendList.length,
